@@ -1,12 +1,14 @@
 from django.db import models
 
-# New imports added for ParentalKey, Orderable, InlinePanel, ImageChooserPanel
+# New imports added for ClusterTaggableManager, TaggedItemBase, MultiFieldPanel
 
 from modelcluster.fields import ParentalKey
+from modelcluster.contrib.taggit import ClusterTaggableManager
+from taggit.models import TaggedItemBase
 
 from wagtail.core.models import Page, Orderable
 from wagtail.core.fields import RichTextField
-from wagtail.admin.edit_handlers import FieldPanel, InlinePanel
+from wagtail.admin.edit_handlers import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 
@@ -26,10 +28,19 @@ class BlogPage(Page):
         return context
 
 
+class BlogPostTag(TaggedItemBase):
+    content_object = ParentalKey(
+        'BlogPost',
+        related_name='tagged_items',
+        on_delete=models.CASCADE
+    )
+
+
 class BlogPost(Page):
     date = models.DateField("Post date")
     intro = models.CharField(max_length=250)
     body = RichTextField(blank=True)
+    tags = ClusterTaggableManager(through=BlogPostTag, blank=True)
 
     def main_image(self):
         gallery_item = self.gallery_images.first()
@@ -44,9 +55,12 @@ class BlogPost(Page):
     ]
 
     content_panels = Page.content_panels + [
-        FieldPanel('date'),
+        MultiFieldPanel([
+            FieldPanel('date'),
+            FieldPanel('tags'),
+        ], heading="Blog information"),
         FieldPanel('intro'),
-        FieldPanel('body', classname="full"),
+        FieldPanel('body'),
         InlinePanel('gallery_images', label="Gallery images"),
     ]
 
