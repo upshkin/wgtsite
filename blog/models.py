@@ -12,6 +12,7 @@ from wagtail.admin.edit_handlers import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
+from wagtail.contrib.settings.models import BaseSetting, register_setting
 
 
 class BlogPage(Page):
@@ -21,8 +22,11 @@ class BlogPage(Page):
         FieldPanel('intro', classname="full")
     ]
 
+    subpage_types = ['blog.BlogPost']
+
     def get_context(self, request):
-        # Update context to include only published posts, ordered by reverse-chron
+        # Update context to include only published posts,
+        # ordered by reverse-chron
         context = super().get_context(request)
         blogposts = self.get_children().live().order_by('-first_published_at')
         context['blogposts'] = blogposts
@@ -80,6 +84,8 @@ class BlogPost(Page):
         InlinePanel('gallery_images', label="Gallery images"),
     ]
 
+    subpage_types = []
+
 
 class BlogPageGalleryImage(Orderable):
     page = ParentalKey(BlogPost, on_delete=models.CASCADE,
@@ -113,3 +119,18 @@ class BlogCategory(models.Model):
 
     class Meta:
         verbose_name_plural = 'blog categories'
+
+
+@register_setting(icon='group')
+class SocialMediaSettings(BaseSetting):
+    facebook = models.URLField(
+        help_text='Your Facebook page URL')
+    instagram = models.CharField(
+        max_length=255, help_text='Your Instagram username, without the @')
+    trip_advisor = models.URLField(
+        help_text='Your Trip Advisor page URL')
+    youtube = models.URLField(
+        help_text='Your YouTube channel or user account URL')
+
+    class Meta:
+        verbose_name = 'Social settings'
