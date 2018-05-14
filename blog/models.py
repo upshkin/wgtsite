@@ -84,13 +84,22 @@ class BlogPost(Page):
             FieldPanel('date'),
             FieldPanel('tags'),
             FieldPanel('categories', widget=forms.CheckboxSelectMultiple),
-        ], heading="Blog information"),
+        ], heading="Blog information", classname="collapsible"),
         FieldPanel('intro'),
         FieldPanel('body'),
         InlinePanel('gallery_images', label="Gallery images"),
     ]
 
     subpage_types = []
+    parent_page_types = ['blog.BlogPage']
+
+    @property
+    def thumb_image(self):
+        thumb_img = self.gallery_images.first()
+        if thumb_img:
+            return thumb_img.image.get_rendition('fill-70x70').img_tag()
+        else:
+            return None
 
 
 class BlogPageGalleryImage(Orderable):
@@ -169,3 +178,5 @@ class FormPage(AbstractEmailForm):
     ]
 
     subpage_types = []
+
+
